@@ -1,0 +1,297 @@
+# Create a virtual enviroment for the project, so it does not mess up with you python installation
+
+python -m venv env
+
+# Activate the enviroment
+
+source env/bin/activate
+
+# To exit the enviroment, simply type:
+
+deactivate
+
+# Install dependencies, KEEP IN MIND the versions, if u using python3, install with pip3
+
+pip install django 
+
+# Which packages are installed
+
+pip list
+
+# Create project with manage.py on the root folder
+
+django-admin.py startproject project .
+
+# Inside the project we'll find four scripts:
+	
+	# __init__.py, tells python that this is a python package
+	# settings.py, project's settings
+	# urls.py, URL patterns
+	# wsgi.py, deploy project
+
+# Run the server, a warning about migrations will pop up, it's not important ATM
+
+python manage.py runserver
+
+# Create a new app, in this case, it will be called "app"
+
+python manage.py startapp app
+
+# Inside the app's new folder we'll find the following:
+	
+	# __init__.py, tells python that this is a python package
+	# admin.py, here you register models so to use django functionality
+	# apps.py, app-specific config
+	# models.py, Storages apps' data models
+	# tests.py, Tests app's code
+	# views.py, Storages apps' views
+	# migrations, DB's data of the app
+
+# Tell Django you have a new app! Modify project/settings.py
+# Add the app name at the end of INSTALLED_APPS, as such:
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'app',
+]
+
+# If you can rerrun the app with no errors, you did it right
+
+python manage.py runserver
+
+# Add views, in views.py, a view is a webpage. There are two ways of doing this.
+
+# Simple way of taking advantage of the new app
+
+# Go edit the file views.py in the newly created app, as the following:
+
+from django.http import HttpResponse
+
+def index(request):
+    return HttpResponse("Hello World! This has worked so far")
+
+# And give it an URL at project/urls.py like the following:
+
+from app import views as app # So its more understandable
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', app.index),
+]
+
+# Now, how it is really done, using templates, create a directory for it:
+
+mkdir templates
+
+# BUT, you can make this big urls file import smaller url files from the apps (modularity)
+
+# Create template folders, one folder per app inside, like so:
+
+├── templates
+│   ├── app1
+│   ├── app2
+│   ├── etc.
+
+mkdir project/templates
+mkdir project/templates/app
+
+# You have to edit settings.py once again, for registering the templates
+# Absolute path of the templates:sudo -u postgres psql
+
+TEMPLATE_DIR = os.path.join(BASE_DIR,'templates')
+
+# Add some html templates inside, like base.html
+
+# Now we go back to the views of our app
+# This import should be already there, allows us to import html files 
+
+from django.shortcuts import render
+
+# We can now exchange the previous ad-hoc code for this one:
+
+return render(request, 'app/raw.html', context=customMsg)
+
+# let's check that the project still works
+
+python manage.py runserver
+
+# Preparate the DB:
+
+# Root access to psql:
+
+sudo -u postgres psql
+
+# create your database with your favourite db manager
+
+# Connecting to psql
+
+psql -h localhost -U alumnodb -d adp
+
+# And now, for the DB stuff
+# You'll need to install psycopg2 and dj-database-url
+
+pip3 install psycopg2 dj-database-url
+
+# Edit settings.py to tell Django that you have a DB:
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'adp',
+        'USER': 'alumnodb',
+        'PASSWORD': 'alumnodb',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+# Then, to test it out, you can migrate and makemigrations
+
+python manage.py makemigrations
+python manage.py migrate
+
+# And then, you may create a superuser
+
+python manage.py createsuperuser # For the admin interface
+
+# Now, in models.py, you can create tables as classes
+
+from django.db import models
+
+class Medico(models.Model):
+	nombreM = models.CharField(max_length=256)
+
+	def __str__(self):
+		return self.nombreM
+
+class Paciente(models.Model):
+	nombreP = models.CharField(max_length=256)
+
+	def __str__(self):
+		return self.nameP
+
+class Receta(models.Model):
+	idMedico = models.ForeignKey(Medico, on_delete=models.CASCADE)
+	idPaciente = models.ForeignKey(Paciente, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return self.idMedico + " gives " + self.idPaciente
+
+# Another example:
+
+class Movie(models.Model):
+	moviename = models.CharField(max_length=256)
+
+	def __str__(self):
+		return self.moviename
+
+class Producer(models.Model):
+	producername = models.CharField(max_length=256)
+
+	def __str__(self):
+		return self.producername
+
+class Produces(models.Model):
+    movieid = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    producerid = models.ForeignKey(Producer, on_delete=models.CASCADE)
+    cost = models.IntegerField(default = 0)
+
+    def __str__(self):
+        return str(self.id)
+
+
+# You can define charFields, URLFields, IntegerFields and DateFields, among others
+# Well have to tell Django what we've created here, so it shows on the admin interface
+# Edit aplicacion/admin.py
+
+from aplicacion.models import Medico, Paciente, Receta
+
+admin.site.register(Medico)
+admin.site.register(Paciente)
+admin.site.register(Receta)
+
+# And, for our second example...
+
+from app.models import Movie, Producer, Produces
+
+admin.site.register(Movie)
+admin.site.register(Producer)
+admin.site.register(Produces)
+
+# All of this should show up on the admin console now
+
+# And now, for the population script
+
+touch populate.py # Follow this file content
+
+# Execute population script
+
+python populate.py
+
+# Change up the template, so it makes use of the db
+
+def index(request):
+    return render(request, 'app/base.html')
+
+# Fire up the server
+
+# Show up things from the DB on the webpages
+# Modify the template
+
+<!DOCTYPE html>
+
+{% load static %}
+
+<html>
+<head>
+	<title>Tables</title>
+</head>
+<body>
+
+{% if error %}
+	{{error}}
+{% endif %}
+
+<table>
+	<th>Movies</th>
+	{% for i in movies %}
+	<tr>
+		<th>{{i.id}}</th>
+		<td>{{i.moviename}}</td>
+	</tr>
+  {% endfor %}
+</table>
+
+<table>
+	<th>Producers</th>
+	{% for i in producers %}
+	<tr>
+		<th>{{i.id}}</th>
+		<td>{{i.producername}}</td>
+	</tr>
+  {% endfor %}
+</table>
+
+</body>
+</html>
+
+# Adapt the views to the new template
+
+from app.models import Movie, Producer, Produces
+
+# Create your views here.
+
+def index(request):
+
+	movies    = Movie.objects.all()
+	producers = Producer.objects.all()
+
+	context_dict = {'movies': movies,
+	                'producers': producers}
+
+	return render(request, 'app/base.html', context_dict)

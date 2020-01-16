@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html>
+<head>
+	<title>Tables</title>
+</head>
+<body>
+
+{% if error %}
+	{{error}}
+{% endif %}
+
+<table>
+	<th>Movies</th>
+	{% for i in movies %}
+	<tr>
+		<th>{{i.id}}</th>
+		<td>{{i.moviename}}</td>
+	</tr>
+  {% endfor %}
+</table>
+
+<table>
+	<th>Producers</th>
+	{% for i in producers %}
+	<tr>
+		<th>{{i.id}}</th>
+		<td>{{i.producername}}</td>
+	</tr>
+  {% endfor %}
+</table>
+
+</body>
+</html>
