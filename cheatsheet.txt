@@ -126,7 +126,13 @@ python manage.py runserver
 
 sudo -u postgres psql
 
-# create your database with your favourite db manager
+# How to drop a database through the terminal:
+
+drop database if exists adp;
+
+# create your database with your favourite db manager, or through the terminal:
+
+create database adp;
 
 # Connecting to psql
 
@@ -135,7 +141,7 @@ psql -h localhost -U alumnodb -d adp
 # And now, for the DB stuff
 # You'll need to install psycopg2 and dj-database-url
 
-pip3 install psycopg2 dj-database-url
+pip install psycopg2 dj-database-url
 
 # Edit settings.py to tell Django that you have a DB:
 
